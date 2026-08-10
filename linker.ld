@@ -61,5 +61,5 @@ SECTIONS {
 }
 
 /* This is the stack pointer location */
-_stack_top = ALIGN(ORIGIN(RAM) + LENGTH(RAM) - 16, 16);
+_stack_top = ORIGIN(RAM) + LENGTH(RAM);
 _data_load_start = _sdata;
