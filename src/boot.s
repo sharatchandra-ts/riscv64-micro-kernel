@@ -25,7 +25,7 @@ clear_bss:
 end_clear_bss:
 
   # Jump to C entry point 
-  call main
+  call kmain
 
 hang:
   wfi 

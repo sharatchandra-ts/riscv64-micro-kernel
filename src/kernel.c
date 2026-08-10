@@ -1,3 +1,3 @@
-int main(){
+int kmain(){
   return 0;
 }

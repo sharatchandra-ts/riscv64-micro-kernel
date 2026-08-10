@@ -8,11 +8,11 @@
 
 ENTRY(_start)
 
-MEMORY{
-  RAM: ORIGIN = RAM_START_ADDR, LENGTH = RAM_SIZE
+MEMORY {
+  RAM : ORIGIN = RAM_START_ADDR, LENGTH = RAM_SIZE
 }
 
-SECTIONS{
+SECTIONS {
   .text : {
     . = ALIGN(8);
     
@@ -32,6 +32,7 @@ SECTIONS{
 
     _sdata = .; 
     *(.data .data*)
+    *(.sdata .sdata.*)
     _edata = .;
 
     . = ALIGN(8);
@@ -42,8 +43,8 @@ SECTIONS{
     . = ALIGN(8);
    
     _sbss = .;
+    *(.sbss .sbss.*)
     *(.bss .bss*)
-    *(.sdata .sdata.*)
     *(COMMON)
     _ebss = .;
 
