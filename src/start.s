@@ -1,4 +1,4 @@
-# boot.s 
+# start.s 
 
 .section .text.boot
 .global _start
