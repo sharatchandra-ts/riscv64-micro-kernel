@@ -18,4 +18,12 @@ void uart_putc(char c);
  */
 void uart_puts(const char* s);
 
+/**
+ * @brief Transmits a signed integer as a ASCII string over UART.
+ * Converts the integer to base-10 characters and sends them sequentially.
+ * 
+ * @param i Integer value to print
+ */
+void uart_puti(const int i);
+
 #endif // UART_H
