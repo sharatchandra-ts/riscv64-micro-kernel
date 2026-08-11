@@ -1,3 +1,4 @@
+#include <stdarg.h>
 #include "modules/uart.h"
 
 // Hardware Register Definitions
@@ -21,6 +22,53 @@ void uart_puts(const char* s) {
       uart_putc(*s);
       s++;
     }
+}
+
+void uart_putf(const char* fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+
+    while (*fmt != '\0') {
+      if (*fmt == '%' && *(fmt + 1) != '\0') {
+        fmt++; // Move past '%'
+        switch (*fmt) {
+          case 'c': {
+            // Fetch as int due to default argument promotion
+            char c = (char)va_arg(args, int);
+            uart_putc(c);
+            break;
+          }
+          case 'd': {
+            int num = va_arg(args, int);
+            uart_puti(num);
+            break;
+          }
+          case 's': {
+            char *s = va_arg(args, char *);
+            if (s == (char*)0) {
+                s = "(null)";
+            }
+            // Print raw string directly
+            uart_puts(s); 
+            break;
+          }
+          case '%': {
+            uart_putc('%');
+            break;
+          }
+          default: {
+            uart_putc('%');
+            uart_putc(*fmt);
+            break;
+          }
+        }
+      } else {
+          uart_putc(*fmt);
+      }
+        fmt++;
+    }
+
+    va_end(args);
 }
 
 void uart_puti(const int i) {

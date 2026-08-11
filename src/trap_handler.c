@@ -11,9 +11,7 @@ void trap_handler(uint64_t scause, uint64_t sepc, uint64_t stval){
   } else {
 
     uint64_t exception_id = scause & ~(1ULL << 63);
-    uart_puts("An exception occured with ID: ");
-    uart_puti(exception_id);
-    uart_putc('\n');
+    uart_putf("An exception occured with ID: %d\n", exception_id);
 
     switch(exception_id){
       case 2:

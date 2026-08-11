@@ -10,8 +10,6 @@ void trap_init(void);
 int kmain(void){
   trap_init();
 
-  uart_putc('0');
-  uart_putc('\n');
   uart_puts("Hello World! \n");
 
   asm volatile("unimp");

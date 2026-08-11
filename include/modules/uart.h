@@ -19,7 +19,16 @@ void uart_putc(char c);
 void uart_puts(const char* s);
 
 /**
- * @brief Transmits a signed integer as a ASCII string over UART.
+ * @brief Formats and transmits a string over UART using format specifiers.
+ * Supports %c (character), %s (string), %d (integer), and %% (literal %).
+ * 
+ * @param fmt Format string containing literal text and specifiers
+ * @param ... Variable arguments corresponding to the format specifiers
+ */
+void uart_putf(const char* fmt, ...);
+
+/**
+ * @brief Transmits a signed integer as an ASCII string over UART.
  * Converts the integer to base-10 characters and sends them sequentially.
  * 
  * @param i Integer value to print
