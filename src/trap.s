@@ -59,6 +59,7 @@ trap_entry:
 
 
   # Call the C high-level trap handler
+  # Arguments: a0 = scause, a1 = sepc, a2 = stval
   call trap_handler
 
 
@@ -66,38 +67,38 @@ trap_entry:
   csrw  sepc, a0
 
   
-  # Restore all the registers back from the stack
-  ld x31, 240(sp)
-  ld x30, 232(sp)
-  ld x29, 224(sp)
-  ld x28, 216(sp)
-  ld x27, 208(sp)
-  ld x26, 200(sp)
-  ld x25, 192(sp)
-  ld x24, 184(sp)
-  ld x23, 176(sp)
-  ld x22, 168(sp)
-  ld x21, 160(sp)
-  ld x20, 152(sp)
-  ld x19, 144(sp)
-  ld x18, 136(sp)
-  ld x17, 128(sp)
-  ld x16, 120(sp)
-  ld x15, 112(sp)
-  ld x14, 104(sp)
-  ld x13, 96(sp)
-  ld x12, 88(sp)
-  ld x11, 80(sp)
-  ld x10, 72(sp)
-  ld x9,  64(sp)
-  ld x8,  56(sp)
-  ld x7,  48(sp)
-  ld x6,  40(sp)
-  ld x5,  32(sp)
-  ld x4,  24(sp)
-  ld x3,  16(sp)
-  ld x2,  8(sp)
-  ld x1,  0(sp)
+  # Restore registers (Skip x2/sp if relying on addi sp, sp, 248 later)
+  ld x1,   0(sp)
+  # ld x2, 8(sp)  Skip overwriting sp here so stack index arithmetic works
+  ld x3,   16(sp)
+  ld x4,   24(sp)
+  ld x5,   32(sp)
+  ld x6,   40(sp)
+  ld x7,   48(sp)
+  ld x8,   56(sp)
+  ld x9,   64(sp)
+  ld x10,  72(sp)
+  ld x11,  80(sp)
+  ld x12,  88(sp)
+  ld x13,  96(sp)
+  ld x14,  104(sp)
+  ld x15,  112(sp)
+  ld x16,  120(sp)
+  ld x17,  128(sp)
+  ld x18,  136(sp)
+  ld x19,  144(sp)
+  ld x20,  152(sp)
+  ld x21,  160(sp)
+  ld x22,  168(sp)
+  ld x23,  176(sp)
+  ld x24,  184(sp)
+  ld x25,  192(sp)
+  ld x26,  200(sp)
+  ld x27,  208(sp)
+  ld x28,  216(sp)
+  ld x29,  224(sp)
+  ld x30,  232(sp)
+  ld x31,  240(sp)  
 
   # Restore user sp back to sscratch
   # ld    t0, 8(sp)

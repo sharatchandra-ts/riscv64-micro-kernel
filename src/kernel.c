@@ -1,7 +1,7 @@
 #include "modules/uart.h"
 
 extern void trap_entry(void);
-extern char* _stack_top;
+extern char _stack_top[];
 
 // Initialize memory addresses for CSRs
 void trap_init(void);
@@ -10,9 +10,9 @@ void trap_init(void);
 int kmain(void){
   trap_init();
 
-  uart_puts("Hello World! \n");
-
   asm volatile("unimp");
+
+  uart_puts("Hello World! \n");
 
   while(1);
 }
