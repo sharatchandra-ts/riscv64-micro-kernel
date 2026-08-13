@@ -1,5 +1,6 @@
 #include "modules/uart.h"
 #include "modules/time.h"
+#include "modules/pmm.h"
 
 #define TIMER_INTERVAL 1000000ULL 
 
@@ -17,6 +18,18 @@ int kmain(void){
   asm volatile("unimp");
 
   uart_puts("Hello World! \n");
+
+  uint8_t *page = pmm_alloc_page();
+  uart_putf("mem_location: %d\n", page);
+
+  page = pmm_alloc_page();
+  uart_putf("mem_location: %d\n", page);
+
+  pmm_free_page();
+
+  page = pmm_alloc_page();
+  uart_putf("mem_location: %d\n", page);
+  
 
   while(1);
 }

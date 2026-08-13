@@ -4,6 +4,7 @@
 
 #define SCAUSE_INTERRUPT_BIT (1ULL << 63)
 #define INTERRUPT_S_TIMER 5LL
+#define EXCEPTION_ILLEGAL_INST 2LL
 // Define how many timer ticks to wait for the next interrupt
 #define TIMER_INTERVAL  100000ULL 
 
@@ -35,7 +36,7 @@ uint64_t trap_handler(uint64_t scause, uint64_t sepc, uint64_t stval){
     uart_putf("An exception occured with ID: %d\n", exception_id);
 
     switch(exception_id){
-      case 2:
+      case EXCEPTION_ILLEGAL_INST:
         uart_putf("Exception: Illegal instruction: %d. ", stval);
         uart_puts("Skipping instruction.\n");
         // Normal 4 byte instructions

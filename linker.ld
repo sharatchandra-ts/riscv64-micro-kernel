@@ -51,6 +51,11 @@ SECTIONS {
     . = ALIGN(8);
   } > RAM
 
+  
+  /* Aligning 4KB for paging (each page is 4KB) */
+  . = ALIGN(4096);
+  _page_alloc_start = .;
+
 
   /DISCARD/ : {
     *(.comment)
@@ -60,6 +65,11 @@ SECTIONS {
 
 }
 
+/* Fixed stack space at top of RAM */
+__stack_size = 0x10000; /* 64 KB  Kernel Stack */
 /* This is the stack pointer location */
 _stack_top = ORIGIN(RAM) + LENGTH(RAM);
-_data_load_start = _sdata;
+_stack_bottom = _stack_top - __stack_size;
+
+/* End of the page allocator memory pool */
+_page_alloc_end = _stack_bottom;
