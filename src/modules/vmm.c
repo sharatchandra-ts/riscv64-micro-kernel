@@ -1,21 +1,12 @@
 #include<stdint.h>
 #include "modules/uart.h"
 #include "modules/pmm.h"
-
-// PTE Bit Flags
-#define PTE_V (1 << 0) // Valid
-#define PTE_R (1 << 1) // Read
-#define PTE_W (1 << 2) // Write
-#define PTE_X (1 << 3) // Execute
-#define PTE_U (1 << 4) // User
-#define PTE_G (1 << 5) // Global
-#define PTE_A (1 << 6) // Accessed
-#define PTE_D (1 << 7) // Dirty
+#include "modules/vmm.h"
 
 #define PAGE_SHIFT 12
 
 // Extracts the Virtual Page Number (VPN) for level i (i = 2, 1, 0)
-static inline uint64_t get_vpn(uint64_t va, int level) {
+static inline uint64_t va_to_vpn(uint64_t va, int level) {
     return (va >> (PAGE_SHIFT + level * 9)) & 0x1FF;
 }
 
@@ -30,42 +21,53 @@ static inline uint64_t ppn_to_pte(uint64_t ppn) {
 }
 
 
-
-uint64_t *page_walk(uint64_t root_ppn, uint64_t va) {
+uint64_t *vmm_walk(uint64_t root_ppn, uint64_t va) {
   uint64_t current_ppn = root_ppn;
-  
+
   // Sv39 has 3 levels: Level 2 (1GB), Level 1 (2MB), Level 0 (4KB)
   for (int level = 2; level > 0; level--) {
-    uint64_t vpn = get_vpn(va, level);
-    
+    uint64_t vpn = va_to_vpn(va, level);
+
     // Calculate Physical Address of the PTE
     uint64_t pte_paddr = (current_ppn << PAGE_SHIFT) + (vpn * 8);
-    uint64_t *pte_ptr = (uint64_t *) pte_paddr;
+    uint64_t *ptep = (uint64_t *) pte_paddr;
 
     // Check if PTE is Valid
-    if (!(*pte_ptr & PTE_V)) {
-      uint64_t new_page_entry = pmm_alloc_page();
-      *pte_ptr = ppn_to_pte(new_page_entry) | PTE_V;
+    if (!(*ptep & PTE_V)) {
+      uint8_t *new_page_entry = pmm_alloc_page();
+      *ptep = ppn_to_pte(*new_page_entry) | PTE_V;
     }
     // Advance current_ppn to the child page table for the next iteration
-    current_ppn = pte_to_ppn(*pte_ptr);
+    current_ppn = pte_to_ppn(*ptep);
   }
 
-  uint64_t vpn0 = get_vpn(va, 0);
+  uint64_t vpn0 = va_to_vpn(va, 0);
+  uint64_t pte0_paddr = (current_ppn << PAGE_SHIFT) + (vpn0 * 8);
   uint64_t *pte_ptr0 = (uint64_t *) pte0_paddr;
 
   return pte_ptr0;
 }
 
 
+void vmm_map_page(uint64_t root_ppn, uint64_t va, uint64_t pa, uint64_t flags){
+  // Traverse/allocate tables down to Level 0
+  uint64_t *ptep0 = vmm_walk(root_ppn, va);
 
-uint64_t page_translate(uint64_t root_ppn, uint64_t va) {
+  // Extract PPN from physical address
+  uint64_t phys_ppn = pa >> PAGE_SHIFT;
+
+  // Store physical mapping + permissions (Valid, Read, Write, Exec, etc.)
+  *ptep0 = ppn_to_pte(phys_ppn) | flags | PTE_V;
+}
+
+
+uint64_t vmm_virt_to_phys(uint64_t root_ppn, uint64_t va) {
   uint64_t current_ppn = root_ppn;
-  
+
   // Sv39 has 3 levels: Level 2 (1GB), Level 1 (2MB), Level 0 (4KB)
   for (int level = 2; level >= 0; level--) {
-    uint64_t vpn = get_vpn(va, level);
-    
+    uint64_t vpn = va_to_vpn(va, level);
+
     // Calculate Physical Address of the PTE
     uint64_t pte_paddr = (current_ppn << PAGE_SHIFT) + (vpn * 8);
     uint64_t pte = *(uint64_t *) pte_paddr;
@@ -109,4 +111,3 @@ uint64_t page_translate(uint64_t root_ppn, uint64_t va) {
   return 0;
 
 }
-
