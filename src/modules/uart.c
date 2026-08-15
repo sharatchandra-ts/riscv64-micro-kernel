@@ -2,7 +2,6 @@
 #include "modules/uart.h"
 
 // Hardware Register Definitions
-#define UART_BASE     0x10000000UL
 #define UART_THR      ((volatile uint8_t *)(UART_BASE + 0x00)) // Transmit Holding Register
 #define UART_LSR      ((volatile uint8_t *)(UART_BASE + 0x05)) // Line Status Register
 

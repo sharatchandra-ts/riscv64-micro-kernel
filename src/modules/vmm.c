@@ -3,8 +3,6 @@
 #include "modules/pmm.h"
 #include "modules/vmm.h"
 
-#define PAGE_SHIFT 12
-
 // Extracts the Virtual Page Number (VPN) for level i (i = 2, 1, 0)
 static inline uint64_t va_to_vpn(uint64_t va, int level) {
     return (va >> (PAGE_SHIFT + level * 9)) & 0x1FF;
@@ -35,7 +33,8 @@ uint64_t *vmm_walk(uint64_t root_ppn, uint64_t va) {
     // Check if PTE is Valid
     if (!(*ptep & PTE_V)) {
       uint8_t *new_page_entry = pmm_alloc_page();
-      *ptep = ppn_to_pte(*new_page_entry) | PTE_V;
+      uint64_t new_page_ppn = (uint64_t)new_page_entry >> PAGE_SHIFT;
+      *ptep = ppn_to_pte(new_page_ppn) | PTE_V; 
     }
     // Advance current_ppn to the child page table for the next iteration
     current_ppn = pte_to_ppn(*ptep);
@@ -111,3 +110,16 @@ uint64_t vmm_virt_to_phys(uint64_t root_ppn, uint64_t va) {
   return 0;
 
 }
+
+
+void vmm_map_range(uint64_t root_ppn, uint64_t start, uint64_t end, uint64_t flags){
+  // Loop through the range in 4KB (PAGE_SIZE) steps
+  for (uint64_t addr = start; addr < end; addr += PAGE_SIZE) {
+    // Identity map: Virtual Address == Physical Address
+    vmm_map_page(root_ppn, addr, addr, flags);
+  }
+
+}
+
+
+// TODO: Come back for giga paging complex paging

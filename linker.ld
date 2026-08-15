@@ -13,46 +13,48 @@ MEMORY {
 }
 
 SECTIONS {
+  . = ALIGN(4096);
+  _stext = .;
   .text : {
-    . = ALIGN(8);
-    
     KEEP(*(.text.boot))
     KEEP(*(.text.startup))
     KEEP(*(.init))
     *(.text .text*)
-    *(.rodata .rodata*)
-    _etext = .;
-
-    . = ALIGN(8);
   } > RAM
+  . = ALIGN(4096);
+  _etext = .;
 
 
+  . = ALIGN(4096);
+  _srodata = .;
+  .rodata : {
+    *(.rodata .rodata*)
+  } > RAM
+  . = ALIGN(4096);
+  _erodata = .;
+
+
+  . = ALIGN(4096);
+  _sdata = .; 
   .data : {
-    . = ALIGN(8);
-
-    _sdata = .; 
     *(.data .data*)
     *(.sdata .sdata.*)
-    _edata = .;
-
-    . = ALIGN(8);
   } > RAM 
+  . = ALIGN(4096);
+  _edata = .;
 
 
+  . = ALIGN(4096);
+  _sbss = .;
   .bss : {
-    . = ALIGN(8);
-   
-    _sbss = .;
     *(.sbss .sbss.*)
     *(.bss .bss*)
     *(COMMON)
-    _ebss = .;
-
-    . = ALIGN(8);
   } > RAM
+  . = ALIGN(4096);
+  _ebss = .;
 
   
-  /* Aligning 4KB for paging (each page is 4KB) */
   . = ALIGN(4096);
   _page_alloc_start = .;
 

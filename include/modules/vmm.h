@@ -18,6 +18,8 @@
 #define PTE_A (1 << 6) // Accessed flag
 #define PTE_D (1 << 7) // Dirty flag
 
+#define PAGE_SHIFT 12
+
 /**
  * @brief Walks the 3-level page table tree for a Virtual Address.
  * Allocates missing intermediate page tables as needed via pmm_alloc_page().
@@ -48,5 +50,8 @@ void vmm_map_page(uint64_t root_ppn, uint64_t va, uint64_t pa, uint64_t flags);
  * @return uint64_t Corresponding Physical Address including page offset
  */
 uint64_t vmm_virt_to_phys(uint64_t root_ppn, uint64_t va);
+
+
+void vmm_map_range(uint64_t root_ppn, uint64_t start, uint64_t end, uint64_t flags);
 
 #endif // VMM_H

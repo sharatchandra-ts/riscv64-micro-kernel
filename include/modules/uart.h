@@ -3,6 +3,9 @@
 
 #include <stdint.h>
 
+#define UART_BASE     0x10000000UL
+#define UART_END      0x10000FFFUL
+
 /**
  * @brief Transmits a single character over UART.
  * Blocks until the Transmit Holding Register is empty.
