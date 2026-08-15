@@ -33,7 +33,7 @@ uint64_t trap_handler(uint64_t scause, uint64_t sepc, uint64_t stval){
 
   } else {
     uint64_t exception_id = scause & ~SCAUSE_INTERRUPT_BIT;
-    uart_putf("An exception occured with ID: %d\n", exception_id);
+    uart_putf("An exception occured with ID: %d, at: %lx, instruction: %lx\n", exception_id, stval, sepc);
 
     switch(exception_id){
       case EXCEPTION_ILLEGAL_INST:

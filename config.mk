@@ -3,5 +3,5 @@ UART_END_ADDR ?= 0x10000fff
 CLINT_ADDR ?= 0x2000000
 
 RAM_START_ADDR ?= 0x80200000 
-RAM_SIZE ?= 8000000    # 128MB in Hex (128 * 1024 * 1024 = 134,217,728 / 0x8000000)
-
+# RAM is slightly less than 128MB because, 2MB is taken up by OpenSBI
+RAM_SIZE ?=	0x7E00000 

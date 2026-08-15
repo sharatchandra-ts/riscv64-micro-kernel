@@ -9,50 +9,50 @@
 ENTRY(_start)
 
 MEMORY {
-  RAM : ORIGIN = RAM_START_ADDR, LENGTH = RAM_SIZE
+  RAM : ORIGIN = RAM_START_ADDR, LENGTH = RAM_SIZE 
 }
 
 SECTIONS {
-  . = ALIGN(4096);
-  _stext = .;
   .text : {
+    . = ALIGN(4096);
+    _stext = .;
     KEEP(*(.text.boot))
     KEEP(*(.text.startup))
     KEEP(*(.init))
     *(.text .text*)
+    . = ALIGN(4096);
+    _etext = .;
   } > RAM
-  . = ALIGN(4096);
-  _etext = .;
 
 
-  . = ALIGN(4096);
-  _srodata = .;
   .rodata : {
+    . = ALIGN(4096);
+    _srodata = .;
     *(.rodata .rodata*)
+    . = ALIGN(4096);
+    _erodata = .;
   } > RAM
-  . = ALIGN(4096);
-  _erodata = .;
 
 
-  . = ALIGN(4096);
-  _sdata = .; 
   .data : {
+    . = ALIGN(4096);
+    _sdata = .; 
     *(.data .data*)
     *(.sdata .sdata.*)
+    . = ALIGN(4096);
+    _edata = .;
   } > RAM 
-  . = ALIGN(4096);
-  _edata = .;
 
 
-  . = ALIGN(4096);
-  _sbss = .;
   .bss : {
+    . = ALIGN(4096);
+    _sbss = .;
     *(.sbss .sbss.*)
     *(.bss .bss*)
     *(COMMON)
+    . = ALIGN(4096);
+    _ebss = .;
   } > RAM
-  . = ALIGN(4096);
-  _ebss = .;
 
   
   . = ALIGN(4096);

@@ -7,6 +7,11 @@
 #define PAGE_SIZE 4096
 
 // This is a bump memory allocator
+// NOTE: pmm_alloc_page() only returns a physical address.
+// Post-satp, this page is UNMAPPED until you explicitly call
+// vmm_map_range()/map_page() on it. Never assume a page is
+// usable just because allocation succeeded — always map before use.
+
 
 // Initialize the allocator using linker symbols
 void pmm_init(void);
