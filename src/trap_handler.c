@@ -45,7 +45,6 @@ uint64_t trap_handler(uint64_t scause, uint64_t sepc, uint64_t stval){
         // Special 2 Byte instructions 
         else 
           sepc += 2;
-
         break;
 
       default:
@@ -55,4 +54,4 @@ uint64_t trap_handler(uint64_t scause, uint64_t sepc, uint64_t stval){
   } 
   return sepc;
 }
-
+// TODO: Implement handling of more exceptions and interrupts

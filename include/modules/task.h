@@ -1,0 +1,51 @@
+#ifndef TASKS_H
+#define TASKS_H
+
+#include <stdint.h>
+#include <stdbool.h>
+
+#define MAX_TASKS 4
+#define TASK_STACK_SIZE 4096  // 1 Page
+
+typedef enum {
+  TASK_STATE_UNUSED = 0,
+  TASK_STATE_READY,
+  TASK_STATE_RUNNING,
+  TASK_STATE_BLOCKED
+} task_state_t;
+
+// Saved Execution Context (Full Trap Frame style)
+typedef struct {
+  uint64_t ra;  // x1
+  uint64_t sp;  // x2
+  uint64_t gp;  // x3
+  uint64_t tp;  // x4
+  uint64_t s0;  // x8
+  uint64_t s1;  // x9  
+  uint64_t s2;  // x18
+  uint64_t s3;  // x19
+  uint64_t s4;  // x20
+  uint64_t s5;  // x21
+  uint64_t s6;  // x22
+  uint64_t s7;  // x23
+  uint64_t s8;  // x24
+  uint64_t s9;  // x25
+  uint64_t s10; // x26
+  uint64_t s11; // x27
+} context_t;
+
+
+// Control Block for a Task (TCB)
+typedef struct {
+  uint32_t     pid;
+  task_state_t state;
+  context_t    context;
+  uintptr_t    stack_base; // Physical/Virtual address returned by pmm_alloc_page()
+} Task;
+
+// Public Task Management API
+void tasks_init(void);
+int  task_create(void (*entry_point)(void));
+void task_yield(void);
+
+#endif // TASKS_H

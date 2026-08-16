@@ -2,10 +2,12 @@
 #include "modules/time.h"
 #include "modules/pmm.h"
 #include "modules/vmm.h"
+#include "modules/task.h"
 
-#define TIMER_INTERVAL 1000000ULL 
+#define TIMER_INTERVAL 1000000ULL
 
 extern void trap_entry(void);
+extern void switch_to_task(context_t *old_ctx, context_t *new_ctx);
 
 extern char _stext[], _etext[];
 extern char _srodata[], _erodata[];
@@ -22,16 +24,40 @@ void trap_init(void);
 void timer_init(void);
 void kernel_map_init(void);
 void satp_init(void);
+void taskA(void);
+void taskB(void);
 
+static context_t taskA_ctx, taskB_ctx, kernel_ctx;
+
+void taskA(void){
+    uart_puts("task: A\n");
+    switch_to_task(&taskA_ctx, &taskB_ctx);
+}
+
+void taskB(void){
+    uart_puts("task: B\n");
+    switch_to_task(&taskB_ctx, &kernel_ctx);
+}
 
 int kmain(void){
   timer_init();
   trap_init();
-  uart_putf("sdata: %lx, edata: %lx, sbss: %lx, ebss: %lx\n", (uint64_t)_sdata, (uint64_t)_edata, (uint64_t)_sbss, (uint64_t)_ebss);
   kernel_map_init();
   uart_puts("Hello World! \n");
   satp_init();
   uart_puts("Paging enabled successfully!\n");
+
+  uint8_t *taskA_stack = pmm_alloc_zeroed_page();
+  uint8_t *taskB_stack = pmm_alloc_zeroed_page();
+
+  taskA_ctx.ra = (uint64_t) taskA;
+  taskA_ctx.sp = (uint64_t) taskA_stack + 4096;
+  taskB_ctx.ra = (uint64_t) taskB;
+  taskB_ctx.sp = (uint64_t) taskB_stack + 4096;
+
+  switch_to_task(&kernel_ctx, &taskA_ctx);
+
+  uart_puts("Returned back to kernel!!\n");
 
   while(1);
 }
@@ -54,9 +80,9 @@ void timer_init(void) {
 }
 
 void kernel_map_init(void){
-  uint8_t *root = pmm_alloc_page();
+  uint8_t *root = pmm_alloc_zeroed_page();
   root_ppn = ((uint64_t) root) >> PAGE_SHIFT;
- 
+
   // Executable Code (Read + Execute)
   vmm_map_range(root_ppn, (uint64_t)_stext, (uint64_t)_etext, PTE_V | PTE_R | PTE_X);
 
@@ -66,10 +92,10 @@ void kernel_map_init(void){
   // Read/Write Data & BSS (Read + Write)
   vmm_map_range(root_ppn, (uint64_t)_sdata, (uint64_t)_edata, PTE_V | PTE_R | PTE_W);
   vmm_map_range(root_ppn, (uint64_t)_sbss, (uint64_t)_ebss, PTE_V | PTE_R | PTE_W);
-  //vmm_map_range(root_ppn, (uint64_t)_page_alloc_start, (uint64_t)_page_alloc_end, PTE_V | PTE_R | PTE_W);
   vmm_map_range(root_ppn, (uint64_t)_stack_bottom, (uint64_t)_stack_top, PTE_V | PTE_R | PTE_W);
   // NOT PTE_X (never execute a device register).
   vmm_map_range(root_ppn, (uint64_t)UART_BASE, (uint64_t)UART_END, PTE_V | PTE_R | PTE_W);
+  vmm_map_range(root_ppn, (uint64_t)_page_alloc_start, (uint64_t)_page_alloc_end, PTE_V | PTE_R | PTE_W);
 }
 
 

@@ -32,9 +32,9 @@ uint64_t *vmm_walk(uint64_t root_ppn, uint64_t va) {
 
     // Check if PTE is Valid
     if (!(*ptep & PTE_V)) {
-      uint8_t *new_page_entry = pmm_alloc_page();
+      uint8_t *new_page_entry = pmm_alloc_zeroed_page();
       uint64_t new_page_ppn = (uint64_t)new_page_entry >> PAGE_SHIFT;
-      *ptep = ppn_to_pte(new_page_ppn) | PTE_V; 
+      *ptep = ppn_to_pte(new_page_ppn) | PTE_V;
     }
     // Advance current_ppn to the child page table for the next iteration
     current_ppn = pte_to_ppn(*ptep);
@@ -51,10 +51,8 @@ uint64_t *vmm_walk(uint64_t root_ppn, uint64_t va) {
 void vmm_map_page(uint64_t root_ppn, uint64_t va, uint64_t pa, uint64_t flags){
   // Traverse/allocate tables down to Level 0
   uint64_t *ptep0 = vmm_walk(root_ppn, va);
-
   // Extract PPN from physical address
   uint64_t phys_ppn = pa >> PAGE_SHIFT;
-
   // Store physical mapping + permissions (Valid, Read, Write, Exec, etc.)
   *ptep0 = ppn_to_pte(phys_ppn) | flags | PTE_V;
 }
@@ -93,17 +91,14 @@ uint64_t vmm_virt_to_phys(uint64_t root_ppn, uint64_t va) {
         uart_puts("Page Fault: Superpages not supported yet.\n");
         while(1);
       }
-
       uint64_t offset = va & 0xFFF;
       return (pte_ppn << PAGE_SHIFT) | offset;
     }
-
 
     if (level == 0) {
       uart_puts("Page Fault: Missing leaf at level 0\n");
       while(1);
     }
-
     // Non-leaf node: Update root PPN and descend to next level
     current_ppn = pte_to_ppn(pte);
   }
@@ -118,8 +113,13 @@ void vmm_map_range(uint64_t root_ppn, uint64_t start, uint64_t end, uint64_t fla
     // Identity map: Virtual Address == Physical Address
     vmm_map_page(root_ppn, addr, addr, flags);
   }
-
 }
 
+uint64_t vmm_alloc_page(uint64_t root_ppn, uint64_t va, uint64_t perm_flags) {
+  uint8_t *page = pmm_alloc_zeroed_page();  // just allocates, doesn't zero
+  vmm_map_page(root_ppn, va, (uint64_t)page, perm_flags);
+  // now safe to touch — zero it here, AFTER mapping
+  return (uint64_t)page;
+}
 
-// TODO: Come back for giga paging complex paging
+// TODO: Superpages not implemented
