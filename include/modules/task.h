@@ -40,12 +40,17 @@ typedef struct {
   uint32_t     pid;
   task_state_t state;
   context_t    context;
-  uintptr_t    stack_base; // Physical/Virtual address returned by pmm_alloc_page()
 } Task;
+
+extern context_t kernel_ctx;
 
 // Public Task Management API
 void tasks_init(void);
+
 int  task_create(void (*entry_point)(void));
-void task_yield(void);
+
+void task_exit(void);
+
+void yield(void);
 
 #endif // TASKS_H

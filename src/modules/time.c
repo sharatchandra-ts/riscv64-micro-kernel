@@ -8,8 +8,8 @@ void tick_handler(void){
   g_ticks++;
 
   // Every 100 ticks is a second
-  if(g_ticks % 100 == 0)
-    uart_putf("Uptime: %d seconds (%d ticks)\n", (g_ticks / 100), g_ticks);
+  // if(g_ticks % 100 == 0)
+    // uart_putf("Uptime: %d seconds (%d ticks)\n", (g_ticks / 100), g_ticks);
   
 }
 

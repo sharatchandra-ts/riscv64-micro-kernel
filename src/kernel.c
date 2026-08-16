@@ -27,16 +27,22 @@ void satp_init(void);
 void taskA(void);
 void taskB(void);
 
-static context_t taskA_ctx, taskB_ctx, kernel_ctx;
+context_t kernel_ctx;
 
 void taskA(void){
+  for(int i = 0; i < 3; i++){
     uart_puts("task: A\n");
-    switch_to_task(&taskA_ctx, &taskB_ctx);
+    yield();
+  }
+  task_exit();
 }
 
 void taskB(void){
+  for(int i = 0; i < 5; i++){
     uart_puts("task: B\n");
-    switch_to_task(&taskB_ctx, &kernel_ctx);
+    yield();
+  }
+  task_exit();
 }
 
 int kmain(void){
@@ -47,15 +53,9 @@ int kmain(void){
   satp_init();
   uart_puts("Paging enabled successfully!\n");
 
-  uint8_t *taskA_stack = pmm_alloc_zeroed_page();
-  uint8_t *taskB_stack = pmm_alloc_zeroed_page();
-
-  taskA_ctx.ra = (uint64_t) taskA;
-  taskA_ctx.sp = (uint64_t) taskA_stack + 4096;
-  taskB_ctx.ra = (uint64_t) taskB;
-  taskB_ctx.sp = (uint64_t) taskB_stack + 4096;
-
-  switch_to_task(&kernel_ctx, &taskA_ctx);
+  task_create(taskA);
+  task_create(taskB);
+  yield();
 
   uart_puts("Returned back to kernel!!\n");
 

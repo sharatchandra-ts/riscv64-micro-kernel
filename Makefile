@@ -2,7 +2,7 @@
 
 # Compiler & Toolchain
 CC        := riscv64-elf-gcc
-CFLAGS    := -Iinclude -nostdlib -ffreestanding -Wall -Wextra -MMD -MP -mcmodel=medany -msmall-data-limit=0
+CFLAGS    := -Iinclude -nostdlib -fno-builtin -ffreestanding -Wall -Wextra -MMD -MP -mcmodel=medany -msmall-data-limit=0
 ASFLAGS   := -nostdlib -ffreestanding -MMD -MP -mcmodel=medany
 LDFLAGS   := -T linker.ld \
              -Wl,--defsym=RAM_START_ADDR=$(RAM_START_ADDR) \
