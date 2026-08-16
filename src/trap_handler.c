@@ -1,6 +1,7 @@
 #include <stdint.h>
 #include "modules/uart.h"
 #include "modules/time.h"
+#include "modules/task.h"
 
 #define SCAUSE_INTERRUPT_BIT (1ULL << 63)
 #define INTERRUPT_S_TIMER 5LL
@@ -18,9 +19,11 @@ uint64_t trap_handler(uint64_t scause, uint64_t sepc, uint64_t stval){
 
     switch (interrupt_id) {
       case INTERRUPT_S_TIMER:
-        tick_handler();
         // Set the next interrupt intervel 
         sbi_set_timer(get_time() + TIMER_INTERVAL);
+
+        tick_handler();
+        yield();
         break;
       default:
         uart_putf("An unknown interrupt occurred with ID: %d\n", interrupt_id);
@@ -33,7 +36,7 @@ uint64_t trap_handler(uint64_t scause, uint64_t sepc, uint64_t stval){
 
   } else {
     uint64_t exception_id = scause & ~SCAUSE_INTERRUPT_BIT;
-    uart_putf("An exception occured with ID: %d, at: %lx, instruction: %lx\n", exception_id, stval, sepc);
+    uart_putf("Exception %d at PC 0x%lx (Trap Value / Fault Address: 0x%lx)\n", exception_id, sepc, stval);
 
     switch(exception_id){
       case EXCEPTION_ILLEGAL_INST:

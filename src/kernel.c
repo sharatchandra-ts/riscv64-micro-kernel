@@ -32,7 +32,6 @@ context_t kernel_ctx;
 void taskA(void){
   for(int i = 0; i < 3; i++){
     uart_puts("task: A\n");
-    yield();
   }
   task_exit();
 }
@@ -40,7 +39,6 @@ void taskA(void){
 void taskB(void){
   for(int i = 0; i < 5; i++){
     uart_puts("task: B\n");
-    yield();
   }
   task_exit();
 }
@@ -55,7 +53,6 @@ int kmain(void){
 
   task_create(taskA);
   task_create(taskB);
-  yield();
 
   uart_puts("Returned back to kernel!!\n");
 

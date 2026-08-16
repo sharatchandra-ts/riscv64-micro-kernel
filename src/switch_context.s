@@ -40,6 +40,9 @@ switch_to_task:
   ld s9, 104(a1)
   ld s10,112(a1)
   ld s11,120(a1)
+  
+  li t0, 2 # 1<<1, i.e. the SIE bit
+  csrs sstatus, t0
 
   # Resume Execution
   ret            # Jumps to restored ra (0(a1))
