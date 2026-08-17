@@ -32,6 +32,7 @@ typedef struct {
   uint64_t s9;  // x25
   uint64_t s10; // x26
   uint64_t s11; // x27
+  uint64_t satp;// Holds the root table addr
 } context_t;
 
 

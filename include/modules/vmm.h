@@ -57,4 +57,6 @@ void vmm_map_range(uint64_t root_ppn, uint64_t start, uint64_t end, uint64_t fla
 // Allocate a single zeroed and mapped 4KB virtual page (returns address)
 uint64_t vmm_alloc_page(uint64_t root_ppn, uint64_t va, uint64_t perm_flags);
 
+uint64_t vmm_create_root_table(void);
+
 #endif // VMM_H

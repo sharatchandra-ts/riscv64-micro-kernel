@@ -3,6 +3,15 @@
 #include "modules/pmm.h"
 #include "modules/vmm.h"
 
+extern char _stext[], _etext[];
+extern char _srodata[], _erodata[];
+extern char _sdata[], _edata[];
+extern char _sbss[], _ebss[];
+
+extern char _page_alloc_start[], _page_alloc_end[];
+extern char _stack_top[], _stack_bottom[];
+
+
 // Extracts the Virtual Page Number (VPN) for level i (i = 2, 1, 0)
 static inline uint64_t va_to_vpn(uint64_t va, int level) {
     return (va >> (PAGE_SHIFT + level * 9)) & 0x1FF;
@@ -116,10 +125,29 @@ void vmm_map_range(uint64_t root_ppn, uint64_t start, uint64_t end, uint64_t fla
 }
 
 uint64_t vmm_alloc_page(uint64_t root_ppn, uint64_t va, uint64_t perm_flags) {
-  uint8_t *page = pmm_alloc_zeroed_page();  // just allocates, doesn't zero
+  uint8_t *page = pmm_alloc_raw_page();  // just allocates, doesn't zero
   vmm_map_page(root_ppn, va, (uint64_t)page, perm_flags);
-  // now safe to touch — zero it here, AFTER mapping
-  return (uint64_t)page;
+  for (int i = 0; i < PAGE_SIZE; i++) page[i] = 0; 
+  return va;
 }
 
+uint64_t vmm_create_root_table(void){
+  uint8_t *root = pmm_alloc_zeroed_page();
+  uint64_t root_ppn = ((uint64_t) root) >> PAGE_SHIFT;
+
+  // Executable Code (Read + Execute)
+  vmm_map_range(root_ppn, (uint64_t)_stext, (uint64_t)_etext, PTE_V | PTE_R | PTE_X);
+
+  // Read-Only Data (Read Only)
+  vmm_map_range(root_ppn, (uint64_t)_srodata, (uint64_t)_erodata, PTE_V | PTE_R);
+
+  // Read/Write Data & BSS (Read + Write)
+  vmm_map_range(root_ppn, (uint64_t)_sdata, (uint64_t)_edata, PTE_V | PTE_R | PTE_W);
+  vmm_map_range(root_ppn, (uint64_t)_sbss, (uint64_t)_ebss, PTE_V | PTE_R | PTE_W);
+  vmm_map_range(root_ppn, (uint64_t)_stack_bottom, (uint64_t)_stack_top, PTE_V | PTE_R | PTE_W);
+  // NOT PTE_X (never execute a device register).
+  vmm_map_range(root_ppn, (uint64_t)UART_BASE, (uint64_t)UART_END, PTE_V | PTE_R | PTE_W);
+
+  return root_ppn;
+}
 // TODO: Superpages not implemented

@@ -1,6 +1,9 @@
 #include "modules/task.h"
 #include "modules/uart.h"
 #include "modules/pmm.h"
+#include "modules/vmm.h"
+
+#define TASK_STACK_VA 0x40000000UL
 
 extern void switch_to_task(context_t *old_ctx, context_t *new_ctx);
 
@@ -17,13 +20,14 @@ void task_init(void){
 int task_create(void (*entry_point)(void)){
   for (int i=0; i < MAX_TASKS; i++){
     if (tasks[i].state == TASK_STATE_UNUSED){
-      // TODO: change from pmm to vmm with virtual addresses
-      uint8_t *task_stack = pmm_alloc_zeroed_page();
+      uint64_t root_ppm_local = vmm_create_root_table();
+      uint64_t task_stack = vmm_alloc_page(root_ppm_local, TASK_STACK_VA, PTE_V | PTE_R | PTE_W | PTE_X);
 
       tasks[i].pid = i;
       tasks[i].state = TASK_STATE_READY;
       tasks[i].context.ra = (uint64_t) entry_point;
-      tasks[i].context.sp = (uint64_t) task_stack + TASK_STACK_SIZE;
+      tasks[i].context.sp = task_stack + TASK_STACK_SIZE;
+      tasks[i].context.satp = (8ULL << 60) | root_ppm_local;
       return i;
     }
   }

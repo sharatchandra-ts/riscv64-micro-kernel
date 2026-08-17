@@ -51,6 +51,8 @@ int kmain(void){
   satp_init();
   uart_puts("Paging enabled successfully!\n");
 
+  kernel_ctx.satp = (8ULL << 60) | root_ppn;
+
   task_create(taskA);
   task_create(taskB);
 
@@ -77,21 +79,7 @@ void timer_init(void) {
 }
 
 void kernel_map_init(void){
-  uint8_t *root = pmm_alloc_zeroed_page();
-  root_ppn = ((uint64_t) root) >> PAGE_SHIFT;
-
-  // Executable Code (Read + Execute)
-  vmm_map_range(root_ppn, (uint64_t)_stext, (uint64_t)_etext, PTE_V | PTE_R | PTE_X);
-
-  // Read-Only Data (Read Only)
-  vmm_map_range(root_ppn, (uint64_t)_srodata, (uint64_t)_erodata, PTE_V | PTE_R);
-
-  // Read/Write Data & BSS (Read + Write)
-  vmm_map_range(root_ppn, (uint64_t)_sdata, (uint64_t)_edata, PTE_V | PTE_R | PTE_W);
-  vmm_map_range(root_ppn, (uint64_t)_sbss, (uint64_t)_ebss, PTE_V | PTE_R | PTE_W);
-  vmm_map_range(root_ppn, (uint64_t)_stack_bottom, (uint64_t)_stack_top, PTE_V | PTE_R | PTE_W);
-  // NOT PTE_X (never execute a device register).
-  vmm_map_range(root_ppn, (uint64_t)UART_BASE, (uint64_t)UART_END, PTE_V | PTE_R | PTE_W);
+  root_ppn = vmm_create_root_table();
   vmm_map_range(root_ppn, (uint64_t)_page_alloc_start, (uint64_t)_page_alloc_end, PTE_V | PTE_R | PTE_W);
 }
 

@@ -40,7 +40,11 @@ switch_to_task:
   ld s9, 104(a1)
   ld s10,112(a1)
   ld s11,120(a1)
-  
+ 
+  ld   t0, 128(a1)
+  csrw satp, t0 
+  sfence.vma
+
   li t0, 2 # 1<<1, i.e. the SIE bit
   csrs sstatus, t0
 
