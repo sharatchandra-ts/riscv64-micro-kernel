@@ -3,7 +3,6 @@
 #include "modules/pmm.h"
 #include "modules/vmm.h"
 
-#define TASK_STACK_VA 0x40000000UL
 
 extern void switch_to_task(context_t *old_ctx, context_t *new_ctx);
 
@@ -17,16 +16,27 @@ void task_init(void){
   } 
 }
 
-int task_create(void (*entry_point)(void)){
-  for (int i=0; i < MAX_TASKS; i++){
-    if (tasks[i].state == TASK_STATE_UNUSED){
+int task_create(void (*entry_point)(void), int stack_pages, uint64_t flags){
+  if (stack_pages > MAX_TASK_PAGES) {
+      uart_puts("Requested stack pages exceed limit. Clamping to MAX_TASK_PAGES.\n");
+      stack_pages = MAX_TASK_PAGES;
+  }
+
+  for (int i = 0; i < MAX_TASKS; i++) {
+    if (tasks[i].state == TASK_STATE_UNUSED) {
       uint64_t root_ppm_local = vmm_create_root_table();
-      uint64_t task_stack = vmm_alloc_page(root_ppm_local, TASK_STACK_VA, PTE_V | PTE_R | PTE_W | PTE_X);
+
+      for (int p = 0; p < stack_pages; p++) {
+          uint64_t va = TASK_STACK_VA + ((uint64_t)p * PAGE_SIZE);
+          vmm_alloc_page(root_ppm_local, va, PTE_R | PTE_W | flags);
+      }
+
+      uint64_t stack_top = TASK_STACK_VA + ((uint64_t)stack_pages * PAGE_SIZE);
 
       tasks[i].pid = i;
       tasks[i].state = TASK_STATE_READY;
       tasks[i].context.ra = (uint64_t) entry_point;
-      tasks[i].context.sp = task_stack + TASK_STACK_SIZE;
+      tasks[i].context.sp = stack_top;
       tasks[i].context.satp = (8ULL << 60) | root_ppm_local;
       return i;
     }

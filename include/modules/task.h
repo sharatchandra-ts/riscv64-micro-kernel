@@ -5,7 +5,8 @@
 #include <stdbool.h>
 
 #define MAX_TASKS 4
-#define TASK_STACK_SIZE 4096  // 1 Page
+#define TASK_STACK_VA 0x40000000UL
+#define MAX_TASK_PAGES 250
 
 typedef enum {
   TASK_STATE_UNUSED = 0,
@@ -48,7 +49,7 @@ extern context_t kernel_ctx;
 // Public Task Management API
 void tasks_init(void);
 
-int  task_create(void (*entry_point)(void));
+int task_create(void (*entry_point)(void), int stack_pages, uint64_t flags);
 
 void task_exit(void);
 

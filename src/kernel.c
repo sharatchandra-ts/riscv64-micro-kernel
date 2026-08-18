@@ -53,10 +53,8 @@ int kmain(void){
 
   kernel_ctx.satp = (8ULL << 60) | root_ppn;
 
-  task_create(taskA);
-  task_create(taskB);
-
-  uart_puts("Returned back to kernel!!\n");
+  task_create(taskA, 1, 0);
+  task_create(taskB, 1, 0);
 
   while(1);
 }
