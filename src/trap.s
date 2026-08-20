@@ -8,15 +8,15 @@
 trap_entry:
 
   # Swap user sp with kernel sp stored in sscratch, use this when multiple stacks exist
-  # csrrw sp, sscratch, sp
+  csrrw sp, sscratch, sp
 
   # Allocate stack space for general registers (31 registers * 8 bytes = 248 bytes)
-  addi sp, sp, -248
+  addi sp, sp, -256
 
 
   # Save all the registers onto the stack
   sd x1,  0(sp)
-  sd x2,  8(sp)
+  # sd x2,  8(sp)
   sd x3,  16(sp)
   sd x4,  24(sp)
   sd x5,  32(sp)
@@ -49,9 +49,9 @@ trap_entry:
 
 
   # Retrieve the original user sp from sscratch and save it
-  # csrr  t0, sscratch
-  # sd    t0, 8(sp)
-  
+  csrr  t0, sscratch
+  sd    t0, 8(sp)
+
   # Pass scause, sepc, and stval as arguments to the C function
   csrr  a0, scause
   csrr  a1, sepc
@@ -66,7 +66,7 @@ trap_entry:
   # Update sepc in case the C handler modified the return address
   csrw  sepc, a0
 
-  
+
   # Restore registers (Skip x2/sp if relying on addi sp, sp, 248 later)
   ld x1,   0(sp)
   # ld x2, 8(sp)  Skip overwriting sp here so stack index arithmetic works
@@ -98,20 +98,18 @@ trap_entry:
   ld x28,  216(sp)
   ld x29,  224(sp)
   ld x30,  232(sp)
-  ld x31,  240(sp)  
+  ld x31,  240(sp)
 
   # Restore user sp back to sscratch
-  # ld    t0, 8(sp)
-  # csrw  sscratch, t0
+  ld    t0, 8(sp)
+  csrw  sscratch, t0
 
 
   # Deallocate stack frame
-  addi sp, sp, 248
+  addi sp, sp, 256
 
   # Swap back to the user stack pointer
-  # csrrw sp, sscratch, sp
+  csrrw sp, sscratch, sp
 
   # Return to user space
   sret
-
-# TODO: FIX sp arethemetic 

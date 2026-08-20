@@ -53,7 +53,7 @@ int kmain(void){
 
   kernel_ctx.satp = (8ULL << 60) | root_ppn;
 
-  task_create(taskA, 1, 0);
+  task_create(NULL, 1, PTE_U);
   task_create(taskB, 1, 0);
 
   while(1);

@@ -5,7 +5,9 @@
 #include <stdbool.h>
 
 #define MAX_TASKS 4
-#define TASK_STACK_VA 0x40000000UL
+#define TASK_STACK_VA 0x40001000UL
+#define TASK_KERNEL_STACK_VA 0x40000000UL
+#define TASK_TEXT_VA 0x00010000UL
 #define MAX_TASK_PAGES 250
 
 typedef enum {
@@ -22,7 +24,7 @@ typedef struct {
   uint64_t gp;  // x3
   uint64_t tp;  // x4
   uint64_t s0;  // x8
-  uint64_t s1;  // x9  
+  uint64_t s1;  // x9
   uint64_t s2;  // x18
   uint64_t s3;  // x19
   uint64_t s4;  // x20
@@ -42,6 +44,8 @@ typedef struct {
   uint32_t     pid;
   task_state_t state;
   context_t    context;
+  bool is_user_task;
+  uint64_t kernel_sp;
 } Task;
 
 extern context_t kernel_ctx;

@@ -1,19 +1,24 @@
+#include <stdbool.h>
 #include "modules/task.h"
 #include "modules/uart.h"
 #include "modules/pmm.h"
 #include "modules/vmm.h"
+#include "modules/kstring.h"
 
 
 extern void switch_to_task(context_t *old_ctx, context_t *new_ctx);
+extern void user_task_entry_trampoline(void);
+extern char user_task[];
+extern char user_task_end[];
 
 static Task tasks[MAX_TASKS];
 // -1 = "no task running yet, we're in kmain"
-static int current_task = -1;                               
+static int current_task = -1;
 
 void task_init(void){
   for(int i=0; i < MAX_TASKS; i++){
     tasks[i].state = TASK_STATE_UNUSED;
-  } 
+  }
 }
 
 int task_create(void (*entry_point)(void), int stack_pages, uint64_t flags){
@@ -28,16 +33,33 @@ int task_create(void (*entry_point)(void), int stack_pages, uint64_t flags){
 
       for (int p = 0; p < stack_pages; p++) {
           uint64_t va = TASK_STACK_VA + ((uint64_t)p * PAGE_SIZE);
-          vmm_alloc_page(root_ppm_local, va, PTE_R | PTE_W | flags);
+          vmm_alloc_page(root_ppm_local, va, PTE_R | PTE_W | PTE_V | flags);
       }
 
       uint64_t stack_top = TASK_STACK_VA + ((uint64_t)stack_pages * PAGE_SIZE);
+      uint64_t task_entry = (uint64_t)entry_point;
+      // tasks[i].kernel_sp = stack_top;
+
+     if (flags & PTE_U) {
+        uint64_t code_pa = (uint64_t) pmm_alloc_raw_page();
+        memset((void *)code_pa, 0, PAGE_SIZE);
+        size_t code_size = (size_t)(user_task_end - user_task);
+        memcpy((void *)code_pa, (const void *)user_task, code_size);
+        vmm_map_page(root_ppm_local, TASK_TEXT_VA, code_pa, PTE_R | PTE_X | PTE_U | PTE_V);
+
+        task_entry = (uint64_t) user_task_entry_trampoline;
+
+        uint8_t *kstack = pmm_alloc_raw_page();
+        vmm_map_page(root_ppm_local, TASK_KERNEL_STACK_VA, (uint64_t)kstack, PTE_R | PTE_W | PTE_V);
+        tasks[i].kernel_sp = (uint64_t)kstack + PAGE_SIZE;
+      }
 
       tasks[i].pid = i;
       tasks[i].state = TASK_STATE_READY;
-      tasks[i].context.ra = (uint64_t) entry_point;
+      tasks[i].context.ra = task_entry;
       tasks[i].context.sp = stack_top;
       tasks[i].context.satp = (8ULL << 60) | root_ppm_local;
+      tasks[i].is_user_task = ((flags & PTE_U) != 0);
       return i;
     }
   }
